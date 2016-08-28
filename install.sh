@@ -61,24 +61,26 @@ detect_user_profile() {
 }
 
 install_with_git() {
+  local PACKAGE_NAME
+  PACKAGE_NAME="$(package_name)"
   local INSTALL_DIR
   INSTALL_DIR="$(install_directory)"
 
   if [ -d "$INSTALL_DIR/.git" ]; then
-    echo "=> $(package_name) is already installed in $INSTALL_DIR, trying to update using git"
+    echo "=> ${PACKAGE_NAME} is already installed in $INSTALL_DIR, trying to update using git"
     command printf "\r=> "
     command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" fetch 2> /dev/null || {
-      echo >&2 "Failed to update $(package_name), run 'git fetch' in $INSTALL_DIR yourself."
+      echo >&2 "Failed to update ${PACKAGE_NAME}, run 'git fetch' in $INSTALL_DIR yourself."
       exit 1
     }
   else
     # Cloning to $INSTALL_DIR
-    echo "=> Downloading $(package_name) from git to '$INSTALL_DIR'"
+    echo "=> Downloading ${PACKAGE_NAME} from git to '$INSTALL_DIR'"
     command printf "\r=> "
     mkdir -p "${INSTALL_DIR}"
     if [ "$(ls -A "${INSTALL_DIR}")" ]; then
       command git init "${INSTALL_DIR}" || {
-        echo >&2 "Failed to initialize $(package_name) repo. Please report this!"
+        echo >&2 "Failed to initialize ${PACKAGE_NAME} repo. Please report this!"
         exit 2
       }
       command git --git-dir="${INSTALL_DIR}/.git" remote add origin "$(install_source_uri)" 2> /dev/null \
@@ -110,21 +112,27 @@ install_with_git() {
 }
 
 do_install() {
+
+  local PACKAGE_NAME
+  PACKAGE_NAME="$(package_name)"
+
   if command_available git; then
     install_with_git
   else
-    echo >&2 "You need git to install $(package_name)"
+    echo >&2 "You need git to install ${PACKAGE_NAME}"
     exit 1
   fi
 
   echo
 
+  local PACKAGE_SPACE
+  PACKAGE_SPACE="$(package_space)"
   local USER_PROFILE
   USER_PROFILE="$(detect_user_profile)"
   local INSTALL_DIR
   INSTALL_DIR="$(install_directory)"
 
-  SOURCE_STR="\nexport $(package_space)_DIR=\"$INSTALL_DIR\"\n[ -s \"\$$(package_space)_DIR/$(package_name).sh\" ] && . \"\$$(package_space)_DIR/$(package_name).sh\"  # This loads $(package_name)\n"
+  SOURCE_STR="\nexport ${PACKAGE_SPACE}_DIR=\"$INSTALL_DIR\"\n[ -s \"\$${PACKAGE_SPACE}_DIR/$${PACKAGE_NAME}.sh\" ] && . \"\$${PACKAGE_SPACE}_DIR/${PACKAGE_NAME}.sh\"  # This loads ${PACKAGE_NAME}\n"
 
   if [ -z "${USER_PROFILE-}" ] ; then
     echo "=> Profile not found. Tried ${USER_PROFILE} (as defined in \$PROFILE), ~/.bashrc, ~/.bash_profile, ~/.zshrc, and ~/.profile."
@@ -134,7 +142,7 @@ do_install() {
     echo "=> Append the following lines to the correct file yourself:"
     command printf "${SOURCE_STR}"
   else
-    if ! command grep -qc "/$(package_name).sh" "$USER_PROFILE"; then
+    if ! command grep -qc "/${PACKAGE_NAME}.sh" "$USER_PROFILE"; then
       echo "=> Appending source string to $USER_PROFILE"
       command printf "$SOURCE_STR" >> "$USER_PROFILE"
     else
@@ -144,11 +152,11 @@ do_install() {
 
   # Source package
   # shellcheck source=/dev/null
-  . "${INSTALL_DIR}/$(package_name).sh"
+  . "${INSTALL_DIR}/${PACKAGE_NAME}.sh"
 
   cleanup_install
 
-  echo "=> Close and reopen your terminal to start using $(package_name) or run the following to use it now:"
+  echo "=> Close and reopen your terminal to start using ${PACKAGE_NAME} or run the following to use it now:"
   command printf "$SOURCE_STR"
 }
 
