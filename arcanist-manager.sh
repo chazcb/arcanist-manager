@@ -26,7 +26,8 @@ arcanist-manager() {
         script_echo "Here's some help"
     ;;
     'update' | 'upgrade' )
-        script_echo "Upgrading ..."
+        script_echo "Updating arcanist-manager ..."
+        command bash "${ARCANIST_MANAGER}/install.sh"
     ;;
     * )
     >&2 nvm --help
