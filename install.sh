@@ -99,15 +99,11 @@ install_with_git() {
             }
         fi
     fi
-    command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet "master"
-    if [ ! -z "$(command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" show-ref refs/heads/master)" ]; then
-        if command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet 2>/dev/null; then
-        command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch --quiet -D master >/dev/null 2>&1
-        else
-        echo >&2 "Your version of git is out of date. Please update it!"
-        command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" branch -D master >/dev/null 2>&1
-        fi
-    fi
+
+    command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" checkout -f --quiet master
+
+    # Hacked this because it wasn't working the way I wanted it to. Now just hard pulls master, kinda janky
+    command git --git-dir="$INSTALL_DIR"/.git --work-tree="$INSTALL_DIR" pull --quiet
     return
 }
 
